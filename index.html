@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuis PAI SDN Banjarwangi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3B82F6; /* Biru untuk Kelas 3 */
+            --secondary-color: #8B5CF6; /* Ungu untuk Kelas 4 */
+            --accent-color: #F59E0B;
+            --danger-color: #EF4444;
+            --bg-color: #EFF6FF;
+            --card-bg: #FFFFFF;
+            --text-main: #1E3A8A;
+            --font-heading: 'Fredoka One', cursive;
+            --font-body: 'Nunito', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--bg-color);
+            background-image: radial-gradient(#3B82F6 1px, transparent 1px);
+            background-size: 20px 20px;
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #app-container { width: 100%; max-width: 600px; padding: 20px; position: relative; }
+
+        /* Style untuk Logo Sekolah */
+        .school-logo {
+            width: 120px;
+            height: auto;
+            border-radius: 15px;
+            border: 4px solid var(--primary-color);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            background-color: white;
+        }
+
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--card-bg); padding: 15px 20px; border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px;
+            border: 3px solid var(--primary-color);
+        }
+
+        .stats-group { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.2rem; }
+        .heart-icon { color: var(--danger-color); font-size: 1.5rem; }
+        
+        #sound-btn {
+            background: none; border: 2px solid #E5E7EB; border-radius: 50%;
+            width: 45px; height: 45px; font-size: 1.2rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+        }
+        #sound-btn.active { background-color: var(--accent-color); color: white; border-color: var(--accent-color); }
+
+        .screen {
+            background: var(--card-bg); padding: 40px 30px; border-radius: 25px;
+            box-shadow: 0 8px 30px rgba(59, 130, 246, 0.2); text-align: center;
+            display: none; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .screen.active { display: block; }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        h1 { font-family: var(--font-heading); color: var(--text-main); font-size: 2.2rem; margin-bottom: 5px; text-shadow: 2px 2px 0px var(--accent-color); }
+        p { font-size: 1.1rem; margin-bottom: 25px; color: #4B5563; }
+
+        .level-btn, .action-btn {
+            display: block; width: 100%; padding: 15px; margin: 10px 0; border: none;
+            border-radius: 15px; background: white; border: 2px solid var(--primary-color);
+            color: var(--text-main); font-family: var(--font-heading); font-size: 1.3rem;
+            cursor: pointer; transition: transform 0.2s, background 0.2s;
+            position: relative;
+        }
+        .level-btn.btn-k4 {
+            border-color: var(--secondary-color);
+            color: #5B21B6;
+        }
+        .level-btn:hover { transform: translateY(-3px); background: var(--primary-color); color: white; box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3); }
+        .level-btn.btn-k4:hover { background: var(--secondary-color); }
+
+        .bank-info {
+            font-size: 0.8rem;
+            font-weight: bold;
+            background: #F3F4F6;
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 10px;
+            margin-top: -5px;
+            margin-bottom: 10px;
+        }
+
+        .timer-container { width: 100%; height: 10px; background: #E5E7EB; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
+        .timer-bar { height: 100%; background: var(--accent-color); width: 100%; transition: width 1s linear; }
+
+        .question-text { font-family: var(--font-heading); font-size: 1.3rem; color: var(--text-main); margin-bottom: 20px; min-height: 80px; display: flex; align-items: center; justify-content: center; }
+        
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        @media (max-width: 500px) { .options-grid { grid-template-columns: 1fr; } }
+
+        .option-btn {
+            background: #F3F4F6; border: 2px solid #D1D5DB; padding: 20px; border-radius: 15px;
+            font-size: 1.1rem; font-weight: 700; color: var(--text-main); cursor: pointer;
+            transition: all 0.2s; text-align: center; font-family: var(--font-body);
+        }
+        .option-btn:hover:not(:disabled) { border-color: var(--primary-color); background: #DBEAFE; }
+        .option-btn.correct { background-color: #D1FAE5 !important; border-color: #10B981 !important; color: #064E3B !important; }
+        .option-btn.wrong { background-color: #FEE2E2 !important; border-color: var(--danger-color) !important; color: #991B1B !important; animation: shake 0.5s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+        .score-display { font-size: 4rem; font-family: var(--font-heading); color: var(--primary-color); margin: 10px 0; }
+        .stars { font-size: 2.5rem; color: #FCD34D; margin-bottom: 20px; }
+        .action-btn { background: var(--primary-color); color: white; box-shadow: 0 4px 0 #1D4ED8; width: auto; padding: 12px 40px; margin: 0 auto; }
+        .action-btn:active { transform: translateY(4px); box-shadow: none; }
+
+        .progress-text { font-size: 0.9rem; color: #888; margin-bottom: 5px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <header id="game-header" style="display: none;">
+            <div class="stats-group">
+                <span>Skor:</span>
+                <span id="score-val">0</span>
+            </div>
+            <button id="sound-btn" class="active" onclick="toggleSound()">🔊</button>
+            <div class="stats-group">
+                <span class="heart-icon">❤️</span>
+                <span id="lives-val">3</span>
+            </div>
+        </header>
+
+        <!-- START SCREEN -->
+        <main id="start-screen" class="screen active">
+            <!-- Gambar Logo -->
+            <img src="logo-sdn-banjarwangi.png" alt="Logo SDN Banjarwangi" class="school-logo" onerror="this.style.display='none'">
+            
+            <h1>Kuis PAI SDN Banjarwangi</h1>
+            <p>Ayo belajar dan raih prestasi!</p>
+            
+            <button class="level-btn" onclick="startGame('class3')">
+                🌱 Kelas 3 SD
+            </button>
+            <div id="bank-info-3" class="bank-info">Bank Soal: 50 / 50</div>
+
+            <button class="level-btn btn-k4" onclick="startGame('class4')">
+                🌳 Kelas 4 SD
+            </button>
+            <div id="bank-info-4" class="bank-info">Bank Soal: 50 / 50</div>
+
+            <p style="font-size: 0.9rem; color: #888; margin-top: 20px;">
+                Sistem akan mengingat soal yang sudah keluar.<br>
+                Soal tidak akan diulang sampai semua 50 habis dimainkan.
+            </p>
+        </main>
+
+        <!-- GAME SCREEN -->
+        <main id="game-screen" class="screen">
+            <div class="progress-text">Soal <span id="q-current">1</span> / 10</div>
+            <div class="timer-container">
+                <div id="timer-bar" class="timer-bar"></div>
+            </div>
+
+            <div class="question-box">
+                <h2 id="question-text" class="question-text">Loading...</h2>
+            </div>
+
+            <div id="options-container" class="options-grid"></div>
+        </main>
+
+        <!-- END SCREEN -->
+        <main id="end-screen" class="screen">
+            <h1 id="end-title">Selesai!</h1>
+            <p id="end-message">Kamu hebat!</p>
+            
+            <div class="stars" id="end-stars">⭐⭐⭐</div>
+            <div class="score-display" id="final-score">0</div>
+            <p>Nilai Akhir: <span id="final-score-text" style="font-weight:bold; color:var(--text-main)"></span></p>
+
+            <button class="action-btn" onclick="showStartScreen()">Main Lagi</button>
+        </main>
+    </div>
+
+    <script>
+        // --- KONFIGURASI ---
+        const QUESTIONS_PER_GAME = 10; 
+        const TIME_LIMIT = 20; 
+        
+        let currentQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let lives = 3;
+        let timerInterval;
+        let timeLeft = TIME_LIMIT;
+        let isSoundOn = true;
+        const synth = window.speechSynthesis;
+
+        // --- DATA SOAL (MASTER 50 SOAL) ---
+        
+        const masterQuestionsClass3 = [
+            { q: "Rukun Islam yang pertama adalah …", options: ["Salat", "Zakat", "Syahadat", "Puasa"], answer: 2 },
+            { q: "Jumlah rukun Islam ada …", options: ["3", "4", "5", "6"], answer: 2 },
+            { q: "Salat wajib dilakukan sebanyak …", options: ["3 kali", "4 kali", "5 kali", "6 kali"], answer: 2 },
+            { q: "Salat Subuh dilakukan pada waktu …", options: ["Siang", "Pagi", "Sore", "Malam"], answer: 1 },
+            { q: "Bulan umat Islam berpuasa adalah …", options: ["Syawal", "Rajab", "Ramadan", "Zulhijah"], answer: 2 },
+            { q: "Puasa artinya menahan diri dari …", options: ["Bermain", "Tidur", "Makan dan minum", "Belajar"], answer: 2 },
+            { q: "Zakat diberikan kepada orang yang …", options: ["Kaya", "Miskin", "Sombong", "Malas"], answer: 1 },
+            { q: "Contoh sedekah adalah …", options: ["Membentak teman", "Membantu orang lain", "Berbohong", "Bertengkar"], answer: 1 },
+            { q: "Akhlak terpuji adalah perbuatan yang …", options: ["Dibenci Allah", "Dilarang guru", "Disukai Allah", "Merugikan diri"], answer: 2 },
+            { q: "Contoh akhlak terpuji di sekolah adalah …", options: ["Mencontek", "Berkelahi", "Jujur", "Membolos"], answer: 2 },
+            { q: "Jujur artinya …", options: ["Berbohong", "Berkata apa adanya", "Menyembunyikan kebenaran", "Curang"], answer: 1 },
+            { q: "Amanah berarti …", options: ["Malas", "Dapat dipercaya", "Nakal", "Pelit"], answer: 1 },
+            { q: "Contoh sikap amanah adalah …", options: ["Menghilangkan barang", "Menjaga titipan", "Berbohong", "Membantah"], answer: 1 },
+            { q: "Sabar artinya …", options: ["Cepat marah", "Menahan emosi", "Membalas kejahatan", "Mengeluh"], answer: 1 },
+            { q: "Syukur artinya …", options: ["Marah", "Berterima kasih", "Sedih", "Takut"], answer: 1 },
+            { q: "Cara bersyukur kepada Allah adalah …", options: ["Mengeluh", "Bermalas-malasan", "Rajin beribadah", "Berbohong"], answer: 2 },
+            { q: "Akhlak tercela adalah perbuatan yang …", options: ["Baik", "Terpuji", "Buruk", "Mulia"], answer: 2 },
+            { q: "Contoh akhlak tercela adalah …", options: ["Jujur", "Sabar", "Bohong", "Amanah"], answer: 2 },
+            { q: "Sombong harus dijauhi karena …", options: ["Disukai Allah", "Merugikan diri sendiri", "Membuat pintar", "Membuat kaya"], answer: 1 },
+            { q: "Malas dapat merugikan …", options: ["Orang lain", "Diri sendiri", "Guru", "Tetangga"], answer: 1 },
+            { q: "Berdoa artinya …", options: ["Bermain", "Meminta kepada Allah", "Belajar", "Bekerja"], answer: 1 },
+            { q: "Kita boleh berdoa pada waktu …", options: ["Pagi saja", "Malam saja", "Siang saja", "Setiap waktu"], answer: 3 },
+            { q: "Saat berdoa sebaiknya …", options: ["Bermain", "Bercanda", "Khusyuk", "Berteriak"], answer: 2 },
+            { q: "Asmaul Husna adalah …", options: ["Nama malaikat", "Nama nabi", "Nama Allah yang indah", "Nama kitab"], answer: 2 },
+            { q: "Ar-Rahman artinya …", options: ["Maha Mengetahui", "Maha Adil", "Maha Pengasih", "Maha Kuat"], answer: 2 },
+            { q: "Nabi terakhir adalah …", options: ["Nabi Musa", "Nabi Isa", "Nabi Ibrahim", "Nabi Muhammad SAW"], answer: 3 },
+            { q: "Nabi Muhammad SAW adalah …", options: ["Raja", "Rasul Allah", "Pedagang", "Ulama"], answer: 1 },
+            { q: "Teladan Nabi Muhammad SAW adalah …", options: ["Pemarah", "Jujur", "Pemalas", "Sombong"], answer: 1 },
+            { q: "Kitab suci umat Islam adalah …", options: ["Injil", "Taurat", "Zabur", "Al-Qur’an"], answer: 3 },
+            { q: "Al-Qur’an diturunkan kepada Nabi …", options: ["Musa", "Isa", "Muhammad", "Ibrahim"], answer: 2 },
+            { q: "Membaca Al-Qur’an termasuk perbuatan …", options: ["Buruk", "Dosa", "Baik", "Terlarang"], answer: 2 },
+            { q: "Sebelum membaca Al-Qur’an sebaiknya …", options: ["Bermain", "Berwudu", "Makan", "Tidur"], answer: 1 },
+            { q: "Hari berakhirnya dunia disebut …", options: ["Hari raya", "Hari kiamat", "Hari libur", "Hari sekolah"], answer: 1 },
+            { q: "Allah selalu …", options: ["Tidur", "Lupa", "Melihat perbuatan kita", "Diam"], answer: 2 },
+            { q: "Tolong-menolong berarti …", options: ["Bermusuhan", "Saling membantu", "Berkelahi", "Mengejek"], answer: 1 },
+            { q: "Contoh tolong-menolong di sekolah adalah …", options: ["Mengejek teman", "Membantu teman belajar", "Bertengkar", "Mencontek"], answer: 1 },
+            { q: "Kita harus menghormati orang tua karena …", options: ["Mereka galak", "Mereka berjasa", "Mereka kaya", "Mereka tua"], answer: 1 },
+            { q: "Guru harus dihormati karena …", options: ["Guru sering marah", "Guru memberi ilmu", "Guru suka memberi tugas", "Guru tegas"], answer: 1 },
+            { q: "Berkata kasar dapat …", options: ["Menyenangkan orang lain", "Menyakiti hati orang lain", "Mendapat pahala", "Disukai teman"], answer: 1 },
+            { q: "Menjaga kebersihan adalah perbuatan …", options: ["Buruk", "Dosa", "Baik", "Terlarang"], answer: 2 },
+            { q: "Kebersihan sebagian dari …", options: ["Kesehatan", "Iman", "Kekayaan", "Ilmu"], answer: 1 },
+            { q: "Membersihkan kelas adalah contoh …", options: ["Kemalasan", "Akhlak terpuji", "Akhlak tercela", "Kesombongan"], answer: 1 },
+            { q: "Mengucap hamdalah berarti …", options: ["Memuji manusia", "Bersyukur kepada Allah", "Berdoa kepada teman", "Mengeluh"], answer: 1 },
+            { q: "Saat mendapat nikmat kita sebaiknya …", options: ["Sombong", "Bersyukur", "Marah", "Diam"], answer: 1 },
+            { q: "Menolong orang tua di rumah adalah …", options: ["Kewajiban", "Larangan", "Dosa", "Kesalahan"], answer: 0 },
+            { q: "Anak saleh adalah anak yang …", options: ["Nakal", "Patuh dan taat", "Pemalas", "Pemarah"], answer: 1 },
+            { q: "Salat dilakukan untuk …", options: ["Bermain", "Mendekatkan diri kepada Allah", "Pamer", "Dipuji"], answer: 1 },
+            { q: "Orang yang rajin salat akan …", options: ["Jauh dari Allah", "Hatinya tenang", "Sering marah", "Malas"], answer: 1 },
+            { q: "Mengucapkan salam adalah perbuatan …", options: ["Buruk", "Baik", "Dilarang", "Tercela"], answer: 1 },
+            { q: "Menjaga sikap dan perkataan termasuk …", options: ["Akhlak", "Olahraga", "Seni", "Bermain"], answer: 0 }
+        ];
+
+        const masterQuestionsClass4 = [
+            { q: "Rukun Islam yang pertama adalah …", options: ["Salat", "Zakat", "Syahadat", "Puasa"], answer: 2 },
+            { q: "Jumlah rukun iman ada …", options: ["5", "6", "7", "8"], answer: 1 },
+            { q: "Beriman kepada Allah artinya …", options: ["Percaya kepada malaikat", "Percaya kepada kitab", "Percaya kepada Allah SWT", "Percaya kepada nabi"], answer: 2 },
+            { q: "Malaikat yang bertugas menyampaikan wahyu adalah …", options: ["Mikail", "Israfil", "Jibril", "Izrail"], answer: 2 },
+            { q: "Kitab suci yang diturunkan kepada Nabi Muhammad SAW adalah …", options: ["Injil", "Taurat", "Zabur", "Al-Qur’an"], answer: 3 },
+            { q: "Nabi yang menerima kitab Taurat adalah …", options: ["Nabi Isa AS", "Nabi Musa AS", "Nabi Daud AS", "Nabi Ibrahim AS"], answer: 1 },
+            { q: "Jumlah salat wajib dalam sehari semalam adalah …", options: ["3", "4", "5", "6"], answer: 2 },
+            { q: "Salat yang dilakukan pada waktu petang adalah …", options: ["Subuh", "Zuhur", "Asar", "Magrib"], answer: 3 },
+            { q: "Puasa Ramadan dilaksanakan pada bulan …", options: ["Syawal", "Rajab", "Sya’ban", "Ramadan"], answer: 3 },
+            { q: "Orang yang wajib berpuasa adalah …", options: ["Anak kecil", "Orang sakit berat", "Musafir", "Orang Islam yang balig dan sehat"], answer: 3 },
+            { q: "Zakat fitrah dibayarkan pada bulan …", options: ["Muharam", "Safar", "Ramadan", "Zulhijah"], answer: 2 },
+            { q: "Zakat bertujuan untuk …", options: ["Menambah harta", "Membersihkan harta", "Membuat kaya", "Membanggakan diri"], answer: 1 },
+            { q: "Contoh sedekah adalah …", options: ["Berbohong", "Membantu fakir miskin", "Mengejek teman", "Bertengkar"], answer: 1 },
+            { q: "Akhlak terpuji adalah …", options: ["Perilaku buruk", "Perilaku tercela", "Perilaku yang disukai Allah", "Perilaku yang merugikan"], answer: 2 },
+            { q: "Contoh akhlak terpuji kepada guru adalah …", options: ["Membantah", "Mengejek", "Menghormati", "Melawan"], answer: 2 },
+            { q: "Jujur artinya …", options: ["Menyembunyikan kebenaran", "Berkata sesuai kenyataan", "Berbohong", "Menipu"], answer: 1 },
+            { q: "Amanah berarti …", options: ["Malas", "Dapat dipercaya", "Sombong", "Curang"], answer: 1 },
+            { q: "Sabar artinya …", options: ["Mudah marah", "Menahan emosi", "Pendendam", "Mengeluh"], answer: 1 },
+            { q: "Bersyukur kepada Allah dapat dilakukan dengan cara …", options: ["Mengeluh", "Bermalas-malasan", "Rajin beribadah", "Berbohong"], answer: 2 },
+            { q: "Akhlak tercela harus …", options: ["Dicontoh", "Dipelihara", "Dihindari", "Dibanggakan"], answer: 2 },
+            { q: "Berdoa artinya …", options: ["Bermain", "Meminta kepada Allah", "Bekerja", "Belajar"], answer: 1 },
+            { q: "Waktu yang baik untuk berdoa adalah …", options: ["Siang saja", "Malam saja", "Setelah salat", "Saat bermain"], answer: 2 },
+            { q: "Asmaul Husna adalah …", options: ["Nama nabi", "Nama malaikat", "Nama Allah yang indah", "Nama kitab"], answer: 2 },
+            { q: "Ar-Rahim artinya …", options: ["Maha Mengetahui", "Maha Penyayang", "Maha Kuat", "Maha Adil"], answer: 1 },
+            { q: "Meneladani Asmaul Husna berarti …", options: ["Meniru sifat baik Allah", "Menjadi seperti Allah", "Menjadi malaikat", "Menjadi nabi"], answer: 0 },
+            { q: "Nabi Muhammad SAW disebut uswatun hasanah karena …", options: ["Kaya raya", "Teladan yang baik", "Paling kuat", "Paling pintar"], answer: 1 },
+            { q: "Sifat Nabi Muhammad SAW yang harus diteladani adalah …", options: ["Pemarah", "Jujur", "Pendendam", "Kikir"], answer: 1 },
+            { q: "Kitab suci umat Islam berisi …", options: ["Cerita rakyat", "Petunjuk hidup", "Lagu", "Dongeng"], answer: 1 },
+            { q: "Membaca Al-Qur’an termasuk …", options: ["Perbuatan dosa", "Perbuatan tercela", "Ibadah", "Permainan"], answer: 2 },
+            { q: "Sebelum membaca Al-Qur’an sebaiknya …", options: ["Tidur", "Bermain", "Berwudu", "Makan"], answer: 2 },
+            { q: "Hari kiamat adalah hari …", options: ["Kelahiran", "Akhir kehidupan di dunia", "Hari raya", "Libur nasional"], answer: 1 },
+            { q: "Beriman kepada hari akhir membuat kita …", options: ["Takut belajar", "Rajin berbuat baik", "Malas beribadah", "Sombong"], answer: 1 },
+            { q: "Allah Maha Melihat berarti Allah …", options: ["Tidak tahu apa-apa", "Melihat semua perbuatan manusia", "Hanya melihat orang baik", "Melihat pada waktu tertentu"], answer: 1 },
+            { q: "Tolong-menolong dalam Islam disebut …", options: ["Permusuhan", "Kerja sama dalam kebaikan", "Persaingan", "Pertengkaran"], answer: 1 },
+            { q: "Contoh tolong-menolong di rumah adalah …", options: ["Bermain game", "Membantu orang tua", "Tidur", "Menonton TV"], answer: 1 },
+            { q: "Menghormati orang tua hukumnya …", options: ["Sunnah", "Wajib", "Makruh", "Haram"], answer: 1 },
+            { q: "Berkata sopan termasuk …", options: ["Akhlak tercela", "Akhlak terpuji", "Perbuatan dosa", "Larangan"], answer: 1 },
+            { q: "Berkata kasar dapat …", options: ["Menyenangkan orang", "Menyakiti perasaan orang lain", "Mendapat pahala", "Membuat disayang"], answer: 1 },
+            { q: "Menjaga kebersihan adalah …", options: ["Perbuatan sia-sia", "Perbuatan tercela", "Perbuatan terpuji", "Larangan"], answer: 2 },
+            { q: "Kebersihan sebagian dari …", options: ["Ilmu", "Iman", "Kekayaan", "Kesehatan"], answer: 1 },
+            { q: "Menjaga lingkungan bersih termasuk sikap …", options: ["Malas", "Tanggung jawab", "Sombong", "Curang"], answer: 1 },
+            { q: "Mengucapkan salam saat bertemu adalah …", options: ["Kebiasaan buruk", "Perbuatan terlarang", "Akhlak terpuji", "Akhlak tercela"], answer: 2 },
+            { q: "Menolong teman yang jatuh adalah …", options: ["Dosa", "Kewajiban", "Perbuatan baik", "Kesalahan"], answer: 2 },
+            { q: "Anak yang berbakti kepada orang tua akan …", options: ["Dibenci Allah", "Disayang Allah", "Dijauhi teman", "Dimarahi guru"], answer: 1 },
+            { q: "Salat dilakukan dengan …", options: ["Bermain", "Sungguh-sungguh dan khusyuk", "Bercanda", "Terburu-buru"], answer: 1 },
+            { q: "Orang yang rajin beribadah akan …", options: ["Gelisah", "Tenang hatinya", "Sombong", "Pemarah"], answer: 1 },
+            { q: "Menghindari perbuatan buruk adalah contoh …", options: ["Akhlak tercela", "Akhlak terpuji", "Perbuatan sia-sia", "Permainan"], answer: 1 },
+            { q: "Mengucapkan terima kasih kepada orang lain termasuk …", options: ["Akhlak buruk", "Akhlak baik", "Kesalahan", "Larangan"], answer: 1 },
+            { q: "Belajar dengan sungguh-sungguh termasuk …", options: ["Ibadah", "Permainan", "Dosa", "Larangan"], answer: 0 },
+            { q: "Tujuan mempelajari PAI adalah …", options: ["Agar pintar saja", "Agar mendapat nilai tinggi", "Agar menjadi anak yang beriman dan berakhlak baik", "Agar terkenal"], answer: 2 }
+        ];
+
+        // --- VARIABEL PENYIMPANAN PROGRESS (POOL SOAL) ---
+        let poolClass3 = [...masterQuestionsClass3];
+        let poolClass4 = [...masterQuestionsClass4];
+        shuffleArray(poolClass3);
+        shuffleArray(poolClass4);
+
+        // --- DOM ELEMENTS ---
+        const screens = { start: document.getElementById('start-screen'), game: document.getElementById('game-screen'), end: document.getElementById('end-screen') };
+        const ui = {
+            header: document.getElementById('game-header'),
+            score: document.getElementById('score-val'),
+            lives: document.getElementById('lives-val'),
+            question: document.getElementById('question-text'),
+            options: document.getElementById('options-container'),
+            timerBar: document.getElementById('timer-bar'),
+            qCurrent: document.getElementById('q-current'),
+            finalScore: document.getElementById('final-score'),
+            finalScoreText: document.getElementById('final-score-text'),
+            endTitle: document.getElementById('end-title'),
+            endMessage: document.getElementById('end-message'),
+            endStars: document.getElementById('end-stars'),
+            soundBtn: document.getElementById('sound-btn'),
+            bankInfo3: document.getElementById('bank-info-3'),
+            bankInfo4: document.getElementById('bank-info-4')
+        };
+
+        // --- LOGIKA UTAMA GAME ---
+
+        function updateBankInfo() {
+            ui.bankInfo3.textContent = `Bank Soal Tersisa: ${poolClass3.length}`;
+            ui.bankInfo4.textContent = `Bank Soal Tersisa: ${poolClass4.length}`;
+        }
+
+        function toggleSound() {
+            isSoundOn = !isSoundOn;
+            ui.soundBtn.classList.toggle('active');
+            ui.soundBtn.innerHTML = isSoundOn ? '🔊' : '🔇';
+            if (!isSoundOn) synth.cancel();
+        }
+
+        function speak(text) {
+            if (!isSoundOn) return;
+            synth.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'id-ID';
+            utterance.rate = 0.9;
+            synth.speak(utterance);
+        }
+
+        function showScreen(screenName) {
+            Object.values(screens).forEach(s => s.classList.remove('active'));
+            screens[screenName].classList.add('active');
+            ui.header.style.display = screenName === 'game' ? 'flex' : 'none';
+            if (screenName !== 'game') {
+                synth.cancel();
+                updateBankInfo(); 
+            }
+        }
+
+        function showStartScreen() {
+            showScreen('start');
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function startGame(level) {
+            score = 0;
+            lives = 3;
+            currentIndex = 0;
+            
+            let currentPool = (level === 'class3') ? poolClass3 : poolClass4;
+
+            if (currentPool.length < QUESTIONS_PER_GAME) {
+                if (level === 'class3') {
+                    poolClass3 = [...masterQuestionsClass3];
+                    shuffleArray(poolClass3);
+                    currentPool = poolClass3;
+                    speak("Semua soal sudah keluar, bank direset ulang.");
+                } else {
+                    poolClass4 = [...masterQuestionsClass4];
+                    shuffleArray(poolClass4);
+                    currentPool = poolClass4;
+                    speak("Semua soal sudah keluar, bank direset ulang.");
+                }
+            }
+
+            currentQuestions = currentPool.splice(0, QUESTIONS_PER_GAME);
+            
+            updateStats();
+            showScreen('game');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (lives <= 0) return endGame(false);
+            if (currentIndex >= currentQuestions.length) return endGame(true);
+
+            const qData = currentQuestions[currentIndex];
+            
+            ui.question.textContent = `${currentIndex + 1}. ${qData.q}`;
+            ui.qCurrent.textContent = currentIndex + 1;
+            
+            ui.options.innerHTML = '';
+            qData.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = opt;
+                btn.onclick = () => handleAnswer(index, btn);
+                ui.options.appendChild(btn);
+            });
+
+            startTimer();
+            setTimeout(() => speak(qData.q), 500);
+        }
+
+        function handleAnswer(selectedIndex, btnElement) {
+            clearInterval(timerInterval);
+            const correctIndex = currentQuestions[currentIndex].answer;
+            const buttons = ui.options.querySelectorAll('.option-btn');
+            
+            buttons.forEach(b => b.disabled = true);
+
+            if (selectedIndex === correctIndex) {
+                btnElement.classList.add('correct');
+                score += 10;
+                speak("Benar!");
+            } else {
+                btnElement.classList.add('wrong');
+                buttons[correctIndex].classList.add('correct');
+                lives--;
+                speak("Salah.");
+            }
+
+            updateStats();
+
+            setTimeout(() => {
+                currentIndex++;
+                loadQuestion();
+            }, 1500);
+        }
+
+        function updateStats() {
+            ui.score.textContent = score;
+            ui.lives.textContent = lives;
+        }
+
+        function startTimer() {
+            timeLeft = TIME_LIMIT;
+            ui.timerBar.style.width = '100%';
+            ui.timerBar.style.backgroundColor = '#F59E0B';
+            clearInterval(timerInterval);
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                const percentage = (timeLeft / TIME_LIMIT) * 100;
+                ui.timerBar.style.width = `${percentage}%`;
+                if (percentage < 30) ui.timerBar.style.backgroundColor = '#EF4444';
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timeUp();
+                }
+            }, 1000);
+        }
+
+        function timeUp() {
+            lives--;
+            updateStats();
+            const correctIndex = currentQuestions[currentIndex].answer;
+            const buttons = ui.options.querySelectorAll('.option-btn');
+            buttons.forEach(b => b.disabled = true);
+            buttons[correctIndex].classList.add('correct');
+            speak("Waktu habis.");
+
+            setTimeout(() => {
+                currentIndex++;
+                loadQuestion();
+            }, 1500);
+        }
+
+        function endGame(isWin) {
+            showScreen('end');
+            const maxScore = QUESTIONS_PER_GAME * 10; 
+            ui.finalScore.textContent = score;
+            ui.finalScoreText.textContent = score + " / 100";
+
+            let stars = "", message = "", voiceMsg = "";
+
+            if (score >= 80) {
+                stars = "⭐⭐⭐";
+                message = "Sempurna! Kamu menguasai materi ini.";
+                ui.endTitle.textContent = "Luar Biasa!";
+                voiceMsg = "Alhamdulillah, nilai kamu sempurna.";
+            } else if (score >= 60) {
+                stars = "⭐⭐";
+                message = "Bagus! Tinggal sedikit lagi.";
+                ui.endTitle.textContent = "Hebat!";
+                voiceMsg = "Bagus sekali, pertahankan prestasimu.";
+            } else {
+                stars = "⭐";
+                message = "Teruslah berlatih, jangan menyerah.";
+                ui.endTitle.textContent = "Semangat!";
+                voiceMsg = "Jangan menyerah, ayo belajar lagi.";
+            }
+
+            if (lives <= 0) {
+                ui.endTitle.textContent = "Nyawa Habis";
+                message = "Cobalah lagi, kamu pasti bisa.";
+                voiceMsg = "Tenang, coba lagi ya.";
+            }
+
+            ui.endStars.textContent = stars;
+            ui.endMessage.textContent = message;
+            setTimeout(() => speak(voiceMsg), 500);
+        }
+
+        // Jalankan update info saat pertama load
+        updateBankInfo();
+    </script>
+</body>
+</html>
